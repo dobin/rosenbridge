@@ -1,0 +1,8 @@
+bak
+bak1
+deploy
+linux
+*.h
+*.cpp
+moc*
+rcc*

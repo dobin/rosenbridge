@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/therecipe/qt/core"
 )
@@ -22,6 +24,30 @@ func (l *SenderBridge) init() {
 }
 
 func (b *SenderBridge) clickAddFile() {
-	fmt.Printf("Click click 2\n")
-	senderTableModel.addNative("a", "b", "c", "d")
+	fmt.Printf("Sending\n")
+	filename := "meh"
+
+	// Check which type it is
+	stat, err := os.Stat(filename)
+	if err != nil {
+		bail("Failed to read %s: %s", filename, err)
+	}
+
+	senderTableModel.addNative(
+		filename,
+		strconv.FormatInt(stat.Size(), 10),
+		"0",
+		"Added")
+
+	if stat.IsDir() {
+		sendDir(filename)
+	} else {
+		sendFile(filename)
+	}
+
+	senderTableModel.edit(
+		filename,
+		strconv.FormatInt(stat.Size(), 10),
+		strconv.FormatInt(stat.Size(), 10),
+		"Done")
 }

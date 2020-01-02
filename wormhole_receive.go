@@ -1,3 +1,6 @@
+// Mostly based on:
+// https://github.com/psanford/wormhole-william/blob/master/cmd/recv.go
+
 package main
 
 import (
@@ -222,53 +225,6 @@ func wormholeTransferText(msg *wormhole.IncomingMessage) {
 	fmt.Println(string(body))
 }
 
-////
-
-func sendText() {
-	var c wormhole.Client
-
-	msg := "Dillinger-entertainer"
-
-	ctx := context.Background()
-
-	code, status, err := c.SendText(ctx, msg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("On the other computer, please run: wormhole receive")
-	fmt.Printf("Wormhole code is: %s\n", code)
-
-	s := <-status
-
-	if s.OK {
-		fmt.Println("OK!")
-	} else {
-		log.Fatalf("Send error: %s", s.Error)
-	}
-}
-
-func recvText(code string) {
-	var c wormhole.Client
-
-	ctx := context.Background()
-	msg, err := c.Receive(ctx, code)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if msg.Type != wormhole.TransferText {
-		log.Fatalf("Expected a text message but got type %s", msg.Type)
-	}
-
-	msgBody, err := ioutil.ReadAll(msg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("got message:")
-	fmt.Println(msgBody)
-}
-
 func errf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg, args...)
 	if !strings.HasSuffix("\n", msg) {
@@ -278,7 +234,7 @@ func errf(msg string, args ...interface{}) {
 
 func bail(msg string, args ...interface{}) {
 	errf(msg, args...)
-	os.Exit(1)
+	//os.Exit(1)
 }
 
 func formatBytes(b int) string {

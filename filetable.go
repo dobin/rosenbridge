@@ -30,8 +30,8 @@ type FileTableModel struct {
 
 func (m *FileTableModel) init() {
 	m.modelData = []TableItem{
-		{"test1.txt", "1000", "1000", "Done"},
-		{"test2.txt", "1000", "0", "Started"},
+		//		{"test1.txt", "1000", "1000", "Done"},
+		//		{"test2.txt", "1000", "0", "Started"},
 	}
 
 	m.ConnectRoleNames(m.roleNames)

@@ -36,7 +36,11 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 		return
 	}
 
-	receiveTableModel.addNative(msg.Name, strconv.Itoa(msg.TransferBytes), "0", "Added")
+	receiveTableModel.addNative(
+		msg.Name,
+		strconv.Itoa(msg.TransferBytes),
+		"0",
+		"Added")
 
 	// Start downloading it in the background
 	switch msg.Type {

@@ -6,8 +6,7 @@ import CustomQmlTypes 1.0
 
 Item {
     id: root
-
-    property ReceiveBridge template: ReceiveBridge{}
+    property ReceiveBridge receivebridge: ReceiveBridge{}
 
     width: 640
     height: 480
@@ -23,90 +22,116 @@ Item {
             Layout.fillWidth: true
 
             Button {
-                id: button
-                text: qsTr("Send")
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-
-            Button {
-                id: button1
+                id: buttonReceive
                 text: qsTr("Receive")
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                enabled: false
+
+                onClicked: {
+                    buttonSend.enabled = true
+                    buttonReceive.enabled = false
+                    tabView.currentIndex = 0
+                }
             }
 
+            Button {
+                id: buttonSend
+                text: qsTr("Send")
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+
+                onClicked: {
+                    buttonSend.enabled = false
+                    buttonReceive.enabled = true
+                    tabView.currentIndex = 1
+                }
+            }
         }
 
 
-        ColumnLayout {
-            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+        TabView {
+            id: tabView
+            width: 360
+            height: 300
             Layout.fillHeight: true
             Layout.fillWidth: true
+            tabsVisible: false
 
-            RowLayout {
-                id: rowLayout1
-                width: 100
-                height: 100
+            Tab {
+                id: viewReceiver
+                anchors.fill: parent
 
-                Label {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: false
+                ColumnLayout {
+                    anchors.fill: parent
                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-
-                    text: qsTr("Code")
-                }
-
-                TextField {
-                    id: ti
-                    width: 80
-                    height: 20
-                    font.pixelSize: 12
+                    Layout.fillHeight: true
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
 
-                    text: root.template.code
-                    onTextChanged: root.template.codeTextUpdate(text)
-                }
+                    RowLayout {
+                        id: rowLayout1
+                        width: 100
+                        height: 100
 
-                Button {
-                    id: buttonDownload
-                    text: qsTr("Download")
-                    Layout.fillHeight: true
+                        TextField {
+                            id: ti
+                            width: 80
+                            height: 20
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
 
-                    onClicked: {
-                        root.template.clickDownload(ti.text)
+                            text: root.receivebridge.code
+                            readOnly: false
+                            placeholderText: "Wormhole code"
+                            onTextChanged: root.receivebridge.codeTextUpdate(text)
+                        }
+
+                        Button {
+                            id: buttonDownload
+                            text: qsTr("Download")
+                            Layout.fillHeight: true
+
+                            onClicked: {
+                                root.receivebridge.clickDownload(ti.text)
+                            }
+                        }
+                    }
+
+                    TableView {
+                        id: tableview
+
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        model: FileTableModel{}
+
+                        TableViewColumn {
+                            role: "Filename"
+                            title: role
+                        }
+
+                        TableViewColumn {
+                            role: "Filesize"
+                            title: role
+                        }
+
+                        TableViewColumn {
+                            role: "Transmitted"
+                            title: role
+                        }
+
+                        TableViewColumn {
+                            role: "Status"
+                            title: role
+                        }
                     }
                 }
             }
 
-            TableView {
-                id: tableview
-
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                model: FileTableModel{}
-
-                TableViewColumn {
-                    role: "Filename"
-                    title: role
-                }
-
-                TableViewColumn {
-                    role: "Filesize"
-                    title: role
-                }
-
-                TableViewColumn {
-                    role: "Transmitted"
-                    title: role
-                }
-
-                TableViewColumn {
-                    role: "Status"
-                    title: role
-                }
+            Tab {
+                id: viewSend
+                anchors.fill: parent
             }
         }
     }

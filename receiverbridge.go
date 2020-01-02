@@ -11,7 +11,6 @@ type ReceiveBridge struct {
 
 	_ func()         `constructor:"init"`
 	_ func(s string) `signal:"clickDownload,auto"`
-
 	_ func(s string) `signal:"codeTextUpdate,auto"`
 	_ string         `property:"code"`
 }

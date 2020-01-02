@@ -1,26 +1,27 @@
 package main
 
-/*
+import (
+	"fmt"
+
+	"github.com/therecipe/qt/core"
+)
+
 type SenderBridge struct {
 	core.QObject
 
-	_ func()         `constructor:"init"`
-	_ func(s string) `signal:"clickDownload,auto"`
-	_ func(s string) `signal:"codeTextUpdate,auto"`
-	_ string         `property:"code"`
+	_ func() `constructor:"init"`
+	_ func() `signal:"clickAddFile,auto"`
+	_ string `property:"code"`
+
+	_ *FileTableModel `property:"TableModel"`
 }
 
 func (l *SenderBridge) init() {
 	senderBridge = l
+	l.SetTableModel(senderTableModel)
 }
 
-func (b *SenderBridge) clickDownload(s string) { // Download
-	fmt.Printf("Click click 1: %s\n", senderBridge.Code())
-	//fmt.Printf("Click click 2: %s\n", s)
-	tableModel.addNative("a", "b", "c", "d")
+func (b *SenderBridge) clickAddFile() {
+	fmt.Printf("Click click 2\n")
+	senderTableModel.addNative("a", "b", "c", "d")
 }
-
-func (b *SenderBridge) codeTextUpdate(s string) {
-	senderBridge.SetCode(s)
-}
-*/

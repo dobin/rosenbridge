@@ -10,15 +10,23 @@ import (
 
 var (
 	receiveBridge *ReceiveBridge
+	senderBridge  *SenderBridge
+
+	receiveTableModel *FileTableModel
+	senderTableModel  *FileTableModel
 )
 
 func init() {
 	FileTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "FileTableModel")
-	ReceiveBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "ReceiveBridge") // Download
+	ReceiveBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "ReceiveBridge")
+	SenderBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "SenderBridge")
 }
 
 func main() {
 	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
+
+	receiveTableModel = NewFileTableModel(nil)
+	senderTableModel = NewFileTableModel(nil)
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 	view := quick.NewQQuickView(nil)

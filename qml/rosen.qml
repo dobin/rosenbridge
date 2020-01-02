@@ -7,6 +7,7 @@ import CustomQmlTypes 1.0
 Item {
     id: root
     property ReceiveBridge receivebridge: ReceiveBridge{}
+    property SenderBridge senderbridge: SenderBridge{}
 
     width: 640
     height: 480
@@ -104,7 +105,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
-                        model: FileTableModel{}
+                        model: root.receivebridge.TableModel
 
                         TableViewColumn {
                             role: "Filename"
@@ -130,8 +131,72 @@ Item {
             }
 
             Tab {
-                id: viewSend
+               id: viewSend
                 anchors.fill: parent
+                
+                ColumnLayout {
+                    id: columnLayout
+                    anchors.fill: parent
+                    
+                    RowLayout {
+                        id: rowLayout2
+                        y: 0
+                        width: 100
+                        height: 64
+                        Layout.fillHeight: false
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        
+                        Button {
+                            id: buttonSendAdd
+                            text: qsTr("Add")
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+
+                            onClicked: {
+                                root.senderbridge.clickAddFile()
+                            }
+                        }
+                        
+                        Button {
+                            id: buttonSendRemove
+                            text: qsTr("Button")
+                            Layout.fillHeight: true
+                            Layout.fillWidth: true
+                        }
+                    }
+                    
+                    TableView {
+                        id: tableviewSend
+                        
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        
+                        model: root.senderbridge.TableModel
+                        
+                        TableViewColumn {
+                            role: "Filename"
+                            title: role
+                        }
+                        
+                        TableViewColumn {
+                            role: "Filesize"
+                            title: role
+                        }
+                        
+                        TableViewColumn {
+                            role: "Transmitted"
+                            title: role
+                        }
+                        
+                        TableViewColumn {
+                            role: "Status"
+                            title: role
+                        }
+                    }
+                    
+                    
+                }
             }
         }
     }

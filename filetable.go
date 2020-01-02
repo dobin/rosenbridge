@@ -16,8 +16,6 @@ type TableItem struct {
 	status      string
 }
 
-var tableModel *FileTableModel
-
 type FileTableModel struct {
 	core.QAbstractTableModel
 
@@ -31,8 +29,6 @@ type FileTableModel struct {
 }
 
 func (m *FileTableModel) init() {
-	tableModel = m
-
 	m.modelData = []TableItem{
 		{"test1.txt", "1000", "1000", "Done"},
 		{"test2.txt", "1000", "0", "Started"},

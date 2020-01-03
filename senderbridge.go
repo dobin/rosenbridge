@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/widgets"
 )
 
 type SenderBridge struct {
@@ -28,8 +29,12 @@ func (b *SenderBridge) clickAddFile() {
 	jobdone := new(int64)
 	feedbackstr := new(string)
 
-	fmt.Printf("Sending\n")
-	filename := "100b.dat"
+	filenames := widgets.QFileDialog_GetOpenFileNames(nil, "some caption", "", "", "", 0)
+	if len(filenames) < 1 {
+		return
+	}
+	filename := filenames[0]
+	fmt.Printf("Sending: %s\n", filename)
 
 	// Check which type it is
 	stat, err := os.Stat(filename)

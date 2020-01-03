@@ -13,9 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cheggaaa/pb/v3"
 	"github.com/psanford/wormhole-william/wormhole"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -24,6 +22,7 @@ var (
 	verify   bool = false
 )
 
+/*
 func sendCommand() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "send [WHAT]",
@@ -58,6 +57,7 @@ func sendCommand() *cobra.Command {
 
 	return &cmd
 }
+*/
 
 func newClient() wormhole.Client {
 	c := wormhole.Client{
@@ -93,7 +93,7 @@ func printInstructions(code string) {
 	fmt.Printf("Wormhole code is: %s\n", code)
 }
 
-func sendFile(filename string) {
+func sendFile(filename string, jobdone *int64, feedbackstr *string) {
 	f, err := os.Open(filename)
 	if err != nil {
 		bail("Failed to open %s: %s", filename, err)
@@ -103,7 +103,7 @@ func sendFile(filename string) {
 
 	ctx := context.Background()
 
-	var bar *pb.ProgressBar
+	//var bar *pb.ProgressBar
 
 	args := []wormhole.SendOption{
 		wormhole.WithCode(codeFlag),
@@ -111,7 +111,9 @@ func sendFile(filename string) {
 
 	if !hideProgressBar {
 		args = append(args, wormhole.WithProgress(func(sentBytes int64, totalBytes int64) {
-			if bar == nil {
+			fmt.Printf("Sent: %d", sentBytes)
+			*jobdone = sentBytes
+			/*if bar == nil {
 				bar = pb.Full.Start64(totalBytes)
 				bar.Set(pb.Bytes, true)
 			}
@@ -119,7 +121,7 @@ func sendFile(filename string) {
 
 			if sentBytes == totalBytes {
 				bar.Finish()
-			}
+			}*/
 		}))
 	}
 
@@ -134,8 +136,10 @@ func sendFile(filename string) {
 
 	if s.OK {
 		fmt.Println("file sent")
+		*feedbackstr = "Ok"
 	} else {
 		bail("Send error: %s", s.Error)
+		*feedbackstr = "Error"
 	}
 }
 

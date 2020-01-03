@@ -21,7 +21,6 @@ type ReceiveBridge struct {
 
 func (l *ReceiveBridge) init() {
 	receiveBridge = l
-
 	l.SetTableModel(receiveTableModel)
 }
 
@@ -46,7 +45,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	// Add file to table
 	receiveTableModel.addNative(
 		msg.Name,
-		strconv.Itoa(msg.TransferBytes),
+		strconv.Itoa(*jobtotal),
 		"0",
 		"Added")
 

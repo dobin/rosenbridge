@@ -24,8 +24,12 @@ func (l *SenderBridge) init() {
 }
 
 func (b *SenderBridge) clickAddFile() {
+	jobtotal := new(int64)
+	jobdone := new(int64)
+	feedbackstr := new(string)
+
 	fmt.Printf("Sending\n")
-	filename := "meh"
+	filename := "100b.dat"
 
 	// Check which type it is
 	stat, err := os.Stat(filename)
@@ -33,21 +37,65 @@ func (b *SenderBridge) clickAddFile() {
 		bail("Failed to read %s: %s", filename, err)
 	}
 
+	*jobtotal = stat.Size()
+	*jobdone = 0
+
+	// Add file to table
 	senderTableModel.addNative(
 		filename,
-		strconv.FormatInt(stat.Size(), 10),
+		strconv.FormatInt(*jobtotal, 10),
 		"0",
 		"Added")
 
-	if stat.IsDir() {
-		sendDir(filename)
-	} else {
-		sendFile(filename)
-	}
+	t := core.NewQTimer(nil)
+	t.ConnectEvent(func(e *core.QEvent) bool {
+		senderTableModel.edit(
+			filename,
+			strconv.FormatInt(*jobtotal, 10),
+			strconv.FormatInt(*jobdone, 10),
+			"Downloading")
 
-	senderTableModel.edit(
-		filename,
-		strconv.FormatInt(stat.Size(), 10),
-		strconv.FormatInt(stat.Size(), 10),
-		"Done")
+		if len(*feedbackstr) > 0 {
+			t.DisconnectEvent()
+			senderTableModel.edit(
+				filename,
+				strconv.FormatInt(*jobtotal, 10),
+				strconv.FormatInt(*jobdone, 10),
+				"Done")
+
+			/*a := widgets.NewQMessageBox(nil)
+			a.SetText(*feedbackstr)
+			a.Show()*/
+
+			return true
+		}
+		return true
+
+	})
+	t.Start(100)
+
+	go func() {
+		/*
+			defer func() {
+				if err := recover(); err != nil {
+					*errstr = fmt.Sprintf("%v", err)
+				}
+			}()
+		*/
+
+		// Start downloading it in the background
+		if stat.IsDir() {
+			sendDir(filename)
+		} else {
+			sendFile(filename, jobdone, feedbackstr)
+		}
+
+		//*feedbackstr = "ok"
+	}()
+
+	/*senderTableModel.edit(
+	filename,
+	strconv.FormatInt(stat.Size(), 10),
+	strconv.FormatInt(stat.Size(), 10),
+	"Done")*/
 }

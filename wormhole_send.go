@@ -93,7 +93,7 @@ func printInstructions(code string) {
 	fmt.Printf("Wormhole code is: %s\n", code)
 }
 
-func sendFile(filename string, jobdone *int64, feedbackstr *string) {
+func sendFile(filename string, jobdone *int64, feedbackstr *string) (string, chan wormhole.SendResult, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		bail("Failed to open %s: %s", filename, err)
@@ -130,17 +130,20 @@ func sendFile(filename string, jobdone *int64, feedbackstr *string) {
 		bail("Error sending message: %s", err)
 	}
 
-	printInstructions(code)
+	return code, status, err
+	/*
+		*thecode = code
+		printInstructions(code)
 
-	s := <-status
+		s := <-status
 
-	if s.OK {
-		fmt.Println("file sent")
-		*feedbackstr = "Ok"
-	} else {
-		bail("Send error: %s", s.Error)
-		*feedbackstr = "Error"
-	}
+		if s.OK {
+			fmt.Println("file sent")
+			*feedbackstr = "Ok"
+		} else {
+			bail("Send error: %s", s.Error)
+			*feedbackstr = "Error"
+		}*/
 }
 
 func sendDir(dirpath string) {

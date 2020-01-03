@@ -13,13 +13,14 @@ var (
 	senderBridge  *SenderBridge
 
 	receiveTableModel *FileTableModel
-	senderTableModel  *FileTableModel
+	senderTableModel  *SendFileTableModel
 )
 
 const BufferSize = 10
 
 func init() {
 	FileTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "FileTableModel")
+	SendFileTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "SendFileTableModel")
 	ReceiveBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "ReceiveBridge")
 	SenderBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "SenderBridge")
 }
@@ -28,7 +29,7 @@ func main() {
 	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
 
 	receiveTableModel = NewFileTableModel(nil)
-	senderTableModel = NewFileTableModel(nil)
+	senderTableModel = NewSendFileTableModel(nil)
 
 	app := widgets.NewQApplication(len(os.Args), os.Args)
 	view := quick.NewQQuickView(nil)

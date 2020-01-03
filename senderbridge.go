@@ -16,7 +16,7 @@ type SenderBridge struct {
 	_ func() `signal:"clickAddFile,auto"`
 	_ string `property:"code"`
 
-	_ *FileTableModel `property:"TableModel"`
+	_ *SendFileTableModel `property:"TableModel"`
 }
 
 func (l *SenderBridge) init() {
@@ -28,6 +28,8 @@ func (b *SenderBridge) clickAddFile() {
 	jobtotal := new(int64)
 	jobdone := new(int64)
 	feedbackstr := new(string)
+	mycode := new(string) // The real code
+	code := new(string)   // Transport the code from thread to copy into mycode
 
 	filenames := widgets.QFileDialog_GetOpenFileNames(nil, "some caption", "", "", "", 0)
 	if len(filenames) < 1 {
@@ -48,6 +50,7 @@ func (b *SenderBridge) clickAddFile() {
 	// Add file to table
 	senderTableModel.addNative(
 		filename,
+		*mycode,
 		strconv.FormatInt(*jobtotal, 10),
 		"0",
 		"Added")
@@ -56,14 +59,16 @@ func (b *SenderBridge) clickAddFile() {
 	t.ConnectEvent(func(e *core.QEvent) bool {
 		senderTableModel.edit(
 			filename,
+			*mycode,
 			strconv.FormatInt(*jobtotal, 10),
 			strconv.FormatInt(*jobdone, 10),
-			"Downloading")
+			"Uploading")
 
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
 			senderTableModel.edit(
 				filename,
+				*mycode,
 				strconv.FormatInt(*jobtotal, 10),
 				strconv.FormatInt(*jobdone, 10),
 				"Done")
@@ -73,6 +78,18 @@ func (b *SenderBridge) clickAddFile() {
 			a.Show()*/
 
 			return true
+		}
+
+		if len(*code) > 0 {
+			fmt.Printf("Code 2: %s", *mycode)
+			mycode = code
+			senderTableModel.edit(
+				filename,
+				*mycode,
+				strconv.FormatInt(*jobtotal, 10),
+				"0",
+				"Added")
+			*code = ""
 		}
 		return true
 
@@ -92,7 +109,27 @@ func (b *SenderBridge) clickAddFile() {
 		if stat.IsDir() {
 			sendDir(filename)
 		} else {
-			sendFile(filename, jobdone, feedbackstr)
+			code, status, err := sendFile(filename, jobdone, feedbackstr)
+
+			fmt.Printf("Code 1: %s", code)
+			if err != nil {
+				bail("Error sending message: %s", err)
+			}
+
+			// Cant update TableModel here in this go func()
+			// Return it to the QTimer
+			*mycode = code
+
+			// Wait till its finished
+			s := <-status
+
+			if s.OK {
+				fmt.Println("file sent")
+				*feedbackstr = "Ok"
+			} else {
+				bail("Send error: %s", s.Error)
+				*feedbackstr = "Error"
+			}
 		}
 
 		//*feedbackstr = "ok"

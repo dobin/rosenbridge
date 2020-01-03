@@ -13,28 +13,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/psanford/wormhole-william/wormhole"
 )
-
-func guiDownload(code string) {
-	msg, err := wormholeConnect(code)
-	if err != nil {
-		// log.Fatal(err)
-		fmt.Printf("Could not connect, wrong code?")
-		return
-	}
-
-	switch msg.Type {
-	case wormhole.TransferText:
-		wormholeTransferText(msg)
-	case wormhole.TransferFile:
-		wormholeTransferFile(msg)
-	case wormhole.TransferDirectory:
-		wormholeTransferDirectory(msg)
-	}
-}
 
 func wormholeConnect(code string) (*wormhole.IncomingMessage, error) {
 	var c wormhole.Client
@@ -49,7 +32,17 @@ func wormholeConnect(code string) (*wormhole.IncomingMessage, error) {
 	return msg, err
 }
 
-func wormholeTransferFile(msg *wormhole.IncomingMessage) {
+// TODO handle this differently
+func wormholeTransferText(msg *wormhole.IncomingMessage, jobtotal *int, jobdone *int, feedbackstr *string) {
+	body, err := ioutil.ReadAll(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(body))
+}
+
+func wormholeTransferFile(msg *wormhole.IncomingMessage, jobtotal *int, jobdone *int, feedbackstr *string) {
 	fmt.Printf("Receiving file (%s) into: %s\n", formatBytes(msg.TransferBytes), msg.Name)
 	/*
 		reader := bufio.NewReader(os.Stdin)
@@ -80,15 +73,23 @@ func wormholeTransferFile(msg *wormhole.IncomingMessage) {
 			bail("Failed to create tempfile: %s", err)
 		}
 
-		proxyReader := pbProxyReader(msg, msg.TransferBytes)
+		buffer := make([]byte, BufferSize)
 
-		_, err = io.Copy(f, proxyReader)
-		if err != nil {
-			os.Remove(f.Name())
-			bail("Receive file error: %s", err)
+		for {
+			bytesread, err := msg.Read(buffer)
+			time.Sleep(1 * time.Second)
+
+			if err != nil {
+				if err != io.EOF {
+					fmt.Println(err)
+				}
+
+				break
+			}
+
+			*jobdone += bytesread
+			f.Write(buffer)
 		}
-
-		proxyReader.Close()
 
 		tmpName := f.Name()
 		f.Close()
@@ -97,10 +98,12 @@ func wormholeTransferFile(msg *wormhole.IncomingMessage) {
 		if err != nil {
 			bail("Rename %s to %s failed: %s", tmpName, msg.Name, err)
 		}
+
+		*feedbackstr = "Done"
 	}
 }
 
-func wormholeTransferDirectory(msg *wormhole.IncomingMessage) {
+func wormholeTransferDirectory(msg *wormhole.IncomingMessage, jobtotal *int, jobdone *int, feedbackstr *string) {
 	var acceptDir bool
 
 	wd, err := os.Getwd()
@@ -214,15 +217,6 @@ func wormholeTransferDirectory(msg *wormhole.IncomingMessage) {
 
 		}
 	}
-}
-
-func wormholeTransferText(msg *wormhole.IncomingMessage) {
-	body, err := ioutil.ReadAll(msg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(string(body))
 }
 
 func errf(msg string, args ...interface{}) {

@@ -16,6 +16,8 @@ var (
 	senderTableModel  *FileTableModel
 )
 
+const BufferSize = 10
+
 func init() {
 	FileTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "FileTableModel")
 	ReceiveBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "ReceiveBridge")

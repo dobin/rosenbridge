@@ -26,7 +26,11 @@ func (l *ReceiveBridge) init() {
 }
 
 func (b *ReceiveBridge) clickDownload(s string) { // Download
-	fmt.Printf("Download code: %s\n", receiveBridge.Code())
+	jobtotal := new(int)
+	jobdone := new(int)
+	feedbackstr := new(string)
+
+	//fmt.Printf("Download code: %s\n", receiveBridge.Code())
 
 	// Check if code is valid
 	msg, err := wormholeConnect(receiveBridge.Code())
@@ -36,27 +40,64 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 		return
 	}
 
+	*jobtotal = msg.TransferBytes
+	*jobdone = 0
+
+	// Add file to table
 	receiveTableModel.addNative(
 		msg.Name,
 		strconv.Itoa(msg.TransferBytes),
 		"0",
 		"Added")
 
-	// Start downloading it in the background
-	switch msg.Type {
-	case wormhole.TransferText:
-		wormholeTransferText(msg)
-	case wormhole.TransferFile:
-		wormholeTransferFile(msg)
-	case wormhole.TransferDirectory:
-		wormholeTransferDirectory(msg)
-	}
+	t := core.NewQTimer(nil)
+	t.ConnectEvent(func(e *core.QEvent) bool {
+		receiveTableModel.edit(
+			msg.Name,
+			strconv.Itoa(*jobtotal),
+			strconv.Itoa(*jobdone),
+			"Downloading")
 
-	receiveTableModel.edit(
-		msg.Name,
-		strconv.Itoa(msg.TransferBytes),
-		strconv.Itoa(msg.TransferBytes),
-		"Done")
+		if len(*feedbackstr) > 0 {
+			t.DisconnectEvent()
+			receiveTableModel.edit(
+				msg.Name,
+				strconv.Itoa(*jobtotal),
+				strconv.Itoa(*jobdone),
+				"Done")
+
+			/*a := widgets.NewQMessageBox(nil)
+			a.SetText(*feedbackstr)
+			a.Show()*/
+
+			return true
+		}
+		return true
+
+	})
+	t.Start(100)
+
+	go func() {
+		/*
+			defer func() {
+				if err := recover(); err != nil {
+					*errstr = fmt.Sprintf("%v", err)
+				}
+			}()
+		*/
+
+		// Start downloading it in the background
+		switch msg.Type {
+		case wormhole.TransferText:
+			wormholeTransferText(msg, jobtotal, jobdone, feedbackstr)
+		case wormhole.TransferFile:
+			wormholeTransferFile(msg, jobtotal, jobdone, feedbackstr)
+		case wormhole.TransferDirectory:
+			wormholeTransferDirectory(msg, jobtotal, jobdone, feedbackstr)
+		}
+
+		//*feedbackstr = "ok"
+	}()
 }
 
 func (b *ReceiveBridge) codeTextUpdate(s string) {

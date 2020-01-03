@@ -16,12 +16,12 @@ type ReceiveBridge struct {
 	_ func(s string) `signal:"codeTextUpdate,auto"`
 	_ string         `property:"code"`
 
-	_ *FileTableModel `property:"TableModel"`
+	_ *RecvFileTableModel `property:"TableModel"`
 }
 
 func (l *ReceiveBridge) init() {
 	receiveBridge = l
-	l.SetTableModel(receiveTableModel)
+	l.SetTableModel(receiverTableModel)
 }
 
 func (b *ReceiveBridge) clickDownload(s string) { // Download
@@ -43,7 +43,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	*jobdone = 0
 
 	// Add file to table
-	receiveTableModel.addNative(
+	receiverTableModel.addNative(
 		msg.Name,
 		strconv.Itoa(*jobtotal),
 		"0",
@@ -51,7 +51,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 
 	t := core.NewQTimer(nil)
 	t.ConnectEvent(func(e *core.QEvent) bool {
-		receiveTableModel.edit(
+		receiverTableModel.edit(
 			msg.Name,
 			strconv.Itoa(*jobtotal),
 			strconv.Itoa(*jobdone),
@@ -59,7 +59,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
-			receiveTableModel.edit(
+			receiverTableModel.edit(
 				msg.Name,
 				strconv.Itoa(*jobtotal),
 				strconv.Itoa(*jobdone),

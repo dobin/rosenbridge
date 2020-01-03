@@ -16,7 +16,7 @@ type TableItem struct {
 	status      string
 }
 
-type FileTableModel struct {
+type RecvFileTableModel struct {
 	core.QAbstractTableModel
 
 	_ func() `constructor:"init"`
@@ -28,7 +28,7 @@ type FileTableModel struct {
 	modelData []TableItem
 }
 
-func (m *FileTableModel) init() {
+func (m *RecvFileTableModel) init() {
 	m.modelData = []TableItem{
 		//		{"test1.txt", "1000", "1000", "Done"},
 		//		{"test2.txt", "1000", "0", "Started"},
@@ -40,7 +40,7 @@ func (m *FileTableModel) init() {
 	m.ConnectData(m.data)
 }
 
-func (m *FileTableModel) roleNames() map[int]*core.QByteArray {
+func (m *RecvFileTableModel) roleNames() map[int]*core.QByteArray {
 	return map[int]*core.QByteArray{
 		Filename:    core.NewQByteArray2("Filename", -1),
 		Filesize:    core.NewQByteArray2("Filesize", -1),
@@ -49,15 +49,15 @@ func (m *FileTableModel) roleNames() map[int]*core.QByteArray {
 	}
 }
 
-func (m *FileTableModel) rowCount(*core.QModelIndex) int {
+func (m *RecvFileTableModel) rowCount(*core.QModelIndex) int {
 	return len(m.modelData)
 }
 
-func (m *FileTableModel) columnCount(*core.QModelIndex) int {
+func (m *RecvFileTableModel) columnCount(*core.QModelIndex) int {
 	return 2
 }
 
-func (m *FileTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
+func (m *RecvFileTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
 	item := m.modelData[index.Row()]
 	switch role {
 	case Filename:
@@ -73,7 +73,7 @@ func (m *FileTableModel) data(index *core.QModelIndex, role int) *core.QVariant 
 	return core.NewQVariant()
 }
 
-func (m *FileTableModel) remove() {
+func (m *RecvFileTableModel) remove() {
 	if len(m.modelData) == 0 {
 		return
 	}
@@ -82,7 +82,7 @@ func (m *FileTableModel) remove() {
 	m.EndRemoveRows()
 }
 
-func (m *FileTableModel) add(item []*core.QVariant) {
+func (m *RecvFileTableModel) add(item []*core.QVariant) {
 	m.BeginInsertRows(core.NewQModelIndex(), len(m.modelData), len(m.modelData))
 	m.modelData = append(
 		m.modelData,
@@ -95,7 +95,7 @@ func (m *FileTableModel) add(item []*core.QVariant) {
 	m.EndInsertRows()
 }
 
-func (m *FileTableModel) addNative(a string, b string, c string, d string) {
+func (m *RecvFileTableModel) addNative(a string, b string, c string, d string) {
 	m.BeginInsertRows(core.NewQModelIndex(), len(m.modelData), len(m.modelData))
 	m.modelData = append(
 		m.modelData,
@@ -108,7 +108,7 @@ func (m *FileTableModel) addNative(a string, b string, c string, d string) {
 	m.EndInsertRows()
 }
 
-func (m *FileTableModel) edit(filename string, filesize string, transmitted string, status string) {
+func (m *RecvFileTableModel) edit(filename string, filesize string, transmitted string, status string) {
 	if len(m.modelData) == 0 {
 		return
 	}

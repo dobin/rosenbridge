@@ -21,9 +21,10 @@ type RecvFileTableModel struct {
 
 	_ func() `constructor:"init"`
 
-	_ func()                                                                    `signal:"remove,auto"`
-	_ func(item []*core.QVariant)                                               `signal:"add,auto"`
-	_ func(filename string, filesize string, transmitted string, status string) `signal:"edit,auto"`
+	_ func()                                                                                  `signal:"remove,auto"`
+	_ func(item []*core.QVariant)                                                             `signal:"add,auto"`
+	_ func(filename string, filesize string, transmitted string, status string)               `signal:"editLast,auto"`
+	_ func(tableIdx int, filename string, filesize string, transmitted string, status string) `signal:"editIdx,auto"`
 
 	modelData []TableItem
 }
@@ -54,7 +55,7 @@ func (m *RecvFileTableModel) rowCount(*core.QModelIndex) int {
 }
 
 func (m *RecvFileTableModel) columnCount(*core.QModelIndex) int {
-	return 2
+	return 4
 }
 
 func (m *RecvFileTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
@@ -95,7 +96,7 @@ func (m *RecvFileTableModel) add(item []*core.QVariant) {
 	m.EndInsertRows()
 }
 
-func (m *RecvFileTableModel) addNative(a string, b string, c string, d string) {
+func (m *RecvFileTableModel) addNative(a string, b string, c string, d string) int {
 	m.BeginInsertRows(core.NewQModelIndex(), len(m.modelData), len(m.modelData))
 	m.modelData = append(
 		m.modelData,
@@ -106,9 +107,11 @@ func (m *RecvFileTableModel) addNative(a string, b string, c string, d string) {
 			d,
 		})
 	m.EndInsertRows()
+
+	return len(m.modelData) - 1
 }
 
-func (m *RecvFileTableModel) edit(filename string, filesize string, transmitted string, status string) {
+func (m *RecvFileTableModel) editLast(filename string, filesize string, transmitted string, status string) {
 	if len(m.modelData) == 0 {
 		return
 	}
@@ -116,5 +119,16 @@ func (m *RecvFileTableModel) edit(filename string, filesize string, transmitted 
 	m.DataChanged(
 		m.Index(len(m.modelData)-1, 0, core.NewQModelIndex()),
 		m.Index(len(m.modelData)-1, 1, core.NewQModelIndex()),
+		[]int{Filename, Filesize, Transmitted, Status})
+}
+
+func (m *RecvFileTableModel) editIdx(tableIdx int, filename string, filesize string, transmitted string, status string) {
+	if len(m.modelData) == 0 {
+		return
+	}
+	m.modelData[tableIdx] = TableItem{filename, filesize, transmitted, status}
+	m.DataChanged(
+		m.Index(tableIdx, 0, core.NewQModelIndex()),
+		m.Index(tableIdx, 1, core.NewQModelIndex()),
 		[]int{Filename, Filesize, Transmitted, Status})
 }

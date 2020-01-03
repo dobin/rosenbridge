@@ -30,6 +30,7 @@ func (b *SenderBridge) clickAddFile() {
 	feedbackstr := new(string)
 	mycode := new(string) // The real code
 	code := new(string)   // Transport the code from thread to copy into mycode
+	var tableIndex int = 0
 
 	filenames := widgets.QFileDialog_GetOpenFileNames(nil, "some caption", "", "", "", 0)
 	if len(filenames) < 1 {
@@ -48,7 +49,7 @@ func (b *SenderBridge) clickAddFile() {
 	*jobdone = 0
 
 	// Add file to table
-	senderTableModel.addNative(
+	tableIndex = senderTableModel.addNative(
 		filename,
 		*mycode,
 		strconv.FormatInt(*jobtotal, 10),
@@ -57,7 +58,8 @@ func (b *SenderBridge) clickAddFile() {
 
 	t := core.NewQTimer(nil)
 	t.ConnectEvent(func(e *core.QEvent) bool {
-		senderTableModel.edit(
+		senderTableModel.editIdx(
+			tableIndex,
 			filename,
 			*mycode,
 			strconv.FormatInt(*jobtotal, 10),
@@ -66,7 +68,8 @@ func (b *SenderBridge) clickAddFile() {
 
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
-			senderTableModel.edit(
+			senderTableModel.editIdx(
+				tableIndex,
 				filename,
 				*mycode,
 				strconv.FormatInt(*jobtotal, 10),
@@ -81,9 +84,9 @@ func (b *SenderBridge) clickAddFile() {
 		}
 
 		if len(*code) > 0 {
-			fmt.Printf("Code 2: %s", *mycode)
 			mycode = code
-			senderTableModel.edit(
+			senderTableModel.editIdx(
+				tableIndex,
 				filename,
 				*mycode,
 				strconv.FormatInt(*jobtotal, 10),

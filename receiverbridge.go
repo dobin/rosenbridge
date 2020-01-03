@@ -28,6 +28,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	jobtotal := new(int)
 	jobdone := new(int)
 	feedbackstr := new(string)
+	var tableIndex int = 0
 
 	//fmt.Printf("Download code: %s\n", receiveBridge.Code())
 
@@ -43,7 +44,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	*jobdone = 0
 
 	// Add file to table
-	receiverTableModel.addNative(
+	tableIndex = receiverTableModel.addNative(
 		msg.Name,
 		strconv.Itoa(*jobtotal),
 		"0",
@@ -51,7 +52,8 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 
 	t := core.NewQTimer(nil)
 	t.ConnectEvent(func(e *core.QEvent) bool {
-		receiverTableModel.edit(
+		receiverTableModel.editIdx(
+			tableIndex,
 			msg.Name,
 			strconv.Itoa(*jobtotal),
 			strconv.Itoa(*jobdone),
@@ -59,7 +61,8 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
-			receiverTableModel.edit(
+			receiverTableModel.editIdx(
+				tableIndex,
 				msg.Name,
 				strconv.Itoa(*jobtotal),
 				strconv.Itoa(*jobdone),

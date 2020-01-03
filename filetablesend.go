@@ -23,9 +23,10 @@ type SendFileTableModel struct {
 
 	_ func() `constructor:"init"`
 
-	_ func()                                                                             `signal:"remove,auto"`
-	_ func(item []*core.QVariant)                                                        `signal:"add,auto"`
-	_ func(filename string, code string, size string, transmitted string, status string) `signal:"edit,auto"`
+	_ func()                                                                                           `signal:"remove,auto"`
+	_ func(item []*core.QVariant)                                                                      `signal:"add,auto"`
+	_ func(filename string, code string, size string, transmitted string, status string)               `signal:"editLast,auto"`
+	_ func(tableIdx int, filename string, code string, size string, transmitted string, status string) `signal:"editIdx,auto"`
 
 	modelData []SendFileTableItem
 }
@@ -57,7 +58,7 @@ func (m *SendFileTableModel) rowCount(*core.QModelIndex) int {
 }
 
 func (m *SendFileTableModel) columnCount(*core.QModelIndex) int {
-	return 2
+	return 5
 }
 
 func (m *SendFileTableModel) data(index *core.QModelIndex, role int) *core.QVariant {
@@ -102,7 +103,7 @@ func (m *SendFileTableModel) add(item []*core.QVariant) {
 }
 
 func (m *SendFileTableModel) addNative(
-	filename string, code string, size string, transmitted string, status string) {
+	filename string, code string, size string, transmitted string, status string) int {
 	m.BeginInsertRows(core.NewQModelIndex(), len(m.modelData), len(m.modelData))
 	m.modelData = append(
 		m.modelData,
@@ -114,9 +115,11 @@ func (m *SendFileTableModel) addNative(
 			status,
 		})
 	m.EndInsertRows()
+
+	return len(m.modelData) - 1
 }
 
-func (m *SendFileTableModel) edit(
+func (m *SendFileTableModel) editLast(
 	filename string,
 	code string,
 	size string,
@@ -130,5 +133,23 @@ func (m *SendFileTableModel) edit(
 	m.DataChanged(
 		m.Index(len(m.modelData)-1, 0, core.NewQModelIndex()),
 		m.Index(len(m.modelData)-1, 1, core.NewQModelIndex()),
+		[]int{sendFilename, sendCode, sendFilesize, sendTransmitted, sendStatus})
+}
+
+func (m *SendFileTableModel) editIdx(
+	tableIdx int,
+	filename string,
+	code string,
+	size string,
+	transmitted string,
+	status string) {
+	if len(m.modelData) == 0 {
+		return
+	}
+	m.modelData[tableIdx] = SendFileTableItem{
+		filename, code, size, transmitted, status}
+	m.DataChanged(
+		m.Index(tableIdx, 0, core.NewQModelIndex()),
+		m.Index(tableIdx, 1, core.NewQModelIndex()),
 		[]int{sendFilename, sendCode, sendFilesize, sendTransmitted, sendStatus})
 }

@@ -4,11 +4,33 @@ import QtQuick.Window 2.3
 import QtQuick.Controls 1.4
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.1
+import QtQuick.Dialogs 1.1
 
 Window {
     width: 800
     height: 400
     id: settingsview
+
+    FileDialog {
+            id: fileDialog
+            property string dir
+
+            title: "Choose download directory"
+            selectExisting: true
+            selectMultiple: false
+            selectFolder: true
+            selectedNameFilter: "All directories (*)"
+            sidebarVisible: false
+
+            onAccepted: {
+                dir = fileDialog.fileUrls[0].slice(7)
+                console.log("Accepted: " + dir)
+                textFieldDownloadDirectory.text = dir
+                root.settingsbridge.onDownloadDirectoryUpdate(dir)
+            }
+            onRejected: { console.log("Rejected") }
+        }
+
 
     ColumnLayout {
         id: columnLayout
@@ -28,9 +50,15 @@ Window {
 
             TextField {
                 id: textFieldDownloadDirectory
+                text: root.settingsbridge.downloadDirectory
                 Layout.fillWidth: true
-                placeholderText: qsTr("Download Directory Path")
+                placeholderText: qsTr("Download Directory Path (empty = working directory")
                 onTextChanged: root.settingsbridge.onDownloadDirectoryUpdate(text)
+            }
+
+            Button {
+                text: "Open"
+                onClicked: fileDialog.open()
             }
         }
 

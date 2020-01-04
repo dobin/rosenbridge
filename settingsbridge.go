@@ -12,15 +12,16 @@ type SettingsBridge struct {
 	_ func()         `constructor:"init"`
 	_ func(s string) `signal:"onServerAddressUpdate,auto"`
 	_ func(s string) `signal:"onDownloadDirectoryUpdate,auto"`
-	_ func(s string) `signal:"onServerAddressEnabledUpdate,auto"`
 
-	_ string `property:"ServerAddress"`
-	_ string `property:"ServerAddressEnabled"`
-	_ string `property:"DownloadDirectory"`
+	_ string `property:"serverAddress"`
+	_ string `property:"downloadDirectory"`
 }
 
 func (b *SettingsBridge) init() {
 	fmt.Printf("Settings init")
+
+	b.SetServerAddress("")
+	b.SetDownloadDirectory("")
 
 	settingsBridge = b
 }
@@ -28,11 +29,6 @@ func (b *SettingsBridge) init() {
 func (b *SettingsBridge) onServerAddressUpdate(s string) {
 	//fmt.Printf("Server Address: %s", s)
 	b.SetServerAddress(s)
-}
-
-func (b *SettingsBridge) onServerAddressEnabledUpdate() {
-	fmt.Printf("Server Address enabled: ??")
-	//b.SetServerAddressEnabled(s)
 }
 
 func (b *SettingsBridge) onDownloadDirectoryUpdate(s string) {

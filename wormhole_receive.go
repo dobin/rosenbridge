@@ -68,9 +68,15 @@ func wormholeTransferFile(msg *wormhole.IncomingMessage, jobtotal *int, jobdone 
 		msg.Reject()
 		bail("transfer rejected")
 	} else {
-		wd, err := os.Getwd()
-		if err != nil {
-			bail("Failed to get working directory: %s", err)
+		var wd string
+		if len(settingsBridge.DownloadDirectory()) <= 0 {
+			wd2, err := os.Getwd()
+			if err != nil {
+				bail("Failed to get working directory: %s", err)
+			}
+			wd = wd2
+		} else {
+			wd = settingsBridge.DownloadDirectory()
 		}
 		f, err := ioutil.TempFile(wd, fmt.Sprintf("%s.tmp", msg.Name))
 		if err != nil {

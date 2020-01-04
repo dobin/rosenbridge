@@ -8,6 +8,9 @@ Item {
     id: root
     property ReceiveBridge receivebridge: ReceiveBridge{}
     property SenderBridge senderbridge: SenderBridge{}
+    property SettingsBridge settingsbridge: SettingsBridge{}
+
+    property variant win
 
     width: 640
     height: 480
@@ -46,6 +49,19 @@ Item {
                     buttonSend.enabled = false
                     buttonReceive.enabled = true
                     tabView.currentIndex = 1
+                }
+            }
+
+            Button {
+                id: buttonSettings
+                text: qsTr("Settings")
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+
+                onClicked: {
+                    var component = Qt.createComponent("PopUpSetingsWindows.qml");
+                    win = component.createObject(root)
+                    win.show();
                 }
             }
         }

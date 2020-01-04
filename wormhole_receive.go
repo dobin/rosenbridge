@@ -20,7 +20,11 @@ import (
 )
 
 func wormholeConnect(code string) (*wormhole.IncomingMessage, error) {
-	var c wormhole.Client
+	//var c wormhole.Client
+	var serverAddress string = settingsBridge.ServerAddress()
+	c := wormhole.Client{
+		RendezvousURL: serverAddress,
+	}
 
 	ctx := context.Background()
 	msg, err := c.Receive(ctx, code)

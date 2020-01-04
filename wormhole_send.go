@@ -60,9 +60,9 @@ func sendCommand() *cobra.Command {
 */
 
 func newClient() wormhole.Client {
+	var serverAddress string = settingsBridge.ServerAddress()
 	c := wormhole.Client{
-		//	RendezvousURL:             relayURL,
-		PassPhraseComponentLength: codeLen,
+		RendezvousURL: serverAddress,
 	}
 
 	if verify {

@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	receiveBridge *ReceiveBridge
-	senderBridge  *SenderBridge
+	receiveBridge  *ReceiveBridge
+	senderBridge   *SenderBridge
+	settingsBridge *SettingsBridge
 
 	receiverTableModel *RecvFileTableModel
 	senderTableModel   *SendFileTableModel
@@ -23,6 +24,7 @@ func init() {
 	SendFileTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "SendFileTableModel")
 	ReceiveBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "ReceiveBridge")
 	SenderBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "SenderBridge")
+	SettingsBridge_QmlRegisterType2("CustomQmlTypes", 1, 0, "SettingsBridge")
 }
 
 func main() {

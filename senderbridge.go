@@ -39,16 +39,13 @@ func (b *SenderBridge) clickAddFile() {
 	filename := filenames[0]
 	fmt.Printf("Sending: %s\n", filename)
 
-	// Check which type it is
 	stat, err := os.Stat(filename)
 	if err != nil {
 		bail("Failed to read %s: %s", filename, err)
 	}
-
 	*jobtotal = stat.Size()
 	*jobdone = 0
 
-	// Add file to table
 	tableIndex = senderTableModel.addNative(
 		filename,
 		*mycode,
@@ -56,16 +53,11 @@ func (b *SenderBridge) clickAddFile() {
 		"0",
 		"Added")
 
+	// Handling results of changes in
+	// jobdone, feedbackstr, code
 	t := core.NewQTimer(nil)
 	t.ConnectEvent(func(e *core.QEvent) bool {
-		senderTableModel.editIdx(
-			tableIndex,
-			filename,
-			*mycode,
-			strconv.FormatInt(*jobtotal, 10),
-			strconv.FormatInt(*jobdone, 10),
-			"Uploading")
-
+		// Handle errors and finish
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
 			senderTableModel.editIdx(
@@ -83,22 +75,37 @@ func (b *SenderBridge) clickAddFile() {
 			return true
 		}
 
-		if len(*code) > 0 {
-			mycode = code
+		// Handle start and upload updates
+		if *jobdone > 0 && *jobdone < *jobtotal {
 			senderTableModel.editIdx(
 				tableIndex,
 				filename,
 				*mycode,
 				strconv.FormatInt(*jobtotal, 10),
-				"0",
+				strconv.FormatInt(*jobdone, 10),
+				"Uploading") //
+		}
+
+		// Handle successful registering/adding of file
+		// Once!
+		if len(*code) > 0 {
+			*mycode = *code
+			senderTableModel.editIdx(
+				tableIndex,
+				filename,
+				*mycode,
+				strconv.FormatInt(*jobtotal, 10),
+				strconv.FormatInt(*jobdone, 10),
 				"Added")
 			*code = ""
 		}
 		return true
-
 	})
-	t.Start(100)
+	t.Start(200) // Every x ms
 
+	// Thread doing the actual file sending
+	// It communicates with parent via variables
+	// jobdone, feedbackstr, code
 	go func() {
 		/*
 			defer func() {
@@ -112,20 +119,18 @@ func (b *SenderBridge) clickAddFile() {
 		if stat.IsDir() {
 			sendDir(filename)
 		} else {
-			code, status, err := sendFile(filename, jobdone, feedbackstr)
-
-			fmt.Printf("Code 1: %s", code)
+			code2, status, err := sendFile(filename, jobdone, feedbackstr)
 			if err != nil {
 				bail("Error sending message: %s", err)
 			}
 
 			// Cant update TableModel here in this go func()
 			// Return it to the QTimer
-			*mycode = code
+			// before waiting for upload result
+			*code = code2
 
 			// Wait till its finished
 			s := <-status
-
 			if s.OK {
 				fmt.Println("file sent")
 				*feedbackstr = "Ok"

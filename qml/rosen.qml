@@ -175,22 +175,27 @@ Item {
                         model: root.senderbridge.TableModel
                         
                         TableViewColumn {
-                            role: "Filename"
+                            role: "sendFilename"
+                            title: role
+                        }
+
+                        TableViewColumn {
+                            role: "sendCode"
+                            title: role
+                        }
+
+                        TableViewColumn {
+                            role: "sendFilesize"
                             title: role
                         }
                         
                         TableViewColumn {
-                            role: "Filesize"
+                            role: "sendTransmitted"
                             title: role
                         }
                         
                         TableViewColumn {
-                            role: "Transmitted"
-                            title: role
-                        }
-                        
-                        TableViewColumn {
-                            role: "Status"
+                            role: "sendStatus"
                             title: role
                         }
                     }

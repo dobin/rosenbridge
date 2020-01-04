@@ -30,8 +30,6 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	feedbackstr := new(string)
 	var tableIndex int = 0
 
-	//fmt.Printf("Download code: %s\n", receiveBridge.Code())
-
 	// Check if code is valid
 	msg, err := wormholeConnect(receiveBridge.Code())
 	if err != nil {
@@ -39,26 +37,20 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 		fmt.Printf("Could not connect, wrong code?")
 		return
 	}
-
 	*jobtotal = msg.TransferBytes
 	*jobdone = 0
 
-	// Add file to table
 	tableIndex = receiverTableModel.addNative(
 		msg.Name,
 		strconv.Itoa(*jobtotal),
 		"0",
 		"Added")
 
+	// Handling results of changes in
+	// jobdone, feedbackstr
 	t := core.NewQTimer(nil)
 	t.ConnectEvent(func(e *core.QEvent) bool {
-		receiverTableModel.editIdx(
-			tableIndex,
-			msg.Name,
-			strconv.Itoa(*jobtotal),
-			strconv.Itoa(*jobdone),
-			"Downloading")
-
+		// Handle errors and finish
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
 			receiverTableModel.editIdx(
@@ -74,11 +66,25 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 
 			return true
 		}
+
+		// hand start and upload updates
+		if *jobdone > 0 && *jobdone < *jobtotal {
+			receiverTableModel.editIdx(
+				tableIndex,
+				msg.Name,
+				strconv.Itoa(*jobtotal),
+				strconv.Itoa(*jobdone),
+				"Downloading")
+		}
+
 		return true
 
 	})
-	t.Start(100)
+	t.Start(200) // Every x ms
 
+	// Thread doing the actual file receiving
+	// It communicates with parent via variables
+	// jobdone, feedbackstr
 	go func() {
 		/*
 			defer func() {

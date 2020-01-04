@@ -6,7 +6,7 @@ import QtQuick.Layouts 1.3
 import QtQuick.Window 2.1
 
 Window {
-    width: 400
+    width: 800
     height: 400
     id: settingsview
 
@@ -17,10 +17,6 @@ Window {
         RowLayout {
             id: rowLayout
             height: 32
-            anchors.right: parent.right
-            anchors.rightMargin: 0
-            anchors.left: parent.left
-            anchors.leftMargin: 0
 
             Label {
                 id: label
@@ -54,15 +50,8 @@ Window {
                 id: textField
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                placeholderText: qsTr("Server Address")
+                placeholderText: qsTr("Server Address (empty = default)")
                 onTextChanged: root.settingsbridge.onServerAddressUpdate(text)
-            }
-
-            CheckBox {
-                id: checkBox
-                text: qsTr("Enabled")
-                Layout.fillHeight: false
-                onClicked: root.settingsbridge.onServerAddressEnabledUpdate()
             }
         }
 

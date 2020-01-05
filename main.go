@@ -17,7 +17,7 @@ var (
 	senderTableModel   *SendFileTableModel
 )
 
-const BufferSize = 10
+const BufferSize = 1024
 
 func init() {
 	RecvFileTableModel_QmlRegisterType2("CustomQmlTypes", 1, 0, "RecvFileTableModel")

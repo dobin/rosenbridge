@@ -96,7 +96,8 @@ func printInstructions(code string) {
 func sendFile(filename string, jobdone *int64, feedbackstr *string) (string, chan wormhole.SendResult, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		bail("Failed to open %s: %s", filename, err)
+		//*feedbackstr = fmt.Sprintf("Failed to open %s: %s", filename, err)
+		return "", nil, err
 	}
 
 	c := newClient()
@@ -127,26 +128,14 @@ func sendFile(filename string, jobdone *int64, feedbackstr *string) (string, cha
 
 	code, status, err := c.SendFile(ctx, filepath.Base(filename), f, args...)
 	if err != nil {
-		bail("Error sending message: %s", err)
+		//*feedbackstr = fmt.Sprintf("Error sending message: %s", err)
+		return "", nil, err
 	}
 
 	return code, status, err
-	/*
-		*thecode = code
-		printInstructions(code)
-
-		s := <-status
-
-		if s.OK {
-			fmt.Println("file sent")
-			*feedbackstr = "Ok"
-		} else {
-			bail("Send error: %s", s.Error)
-			*feedbackstr = "Error"
-		}*/
 }
 
-func sendDir(dirpath string) {
+func sendDir(dirpath string, jobdone *int64, feedbackstr *string) (string, chan wormhole.SendResult, error) {
 	dirpath = strings.TrimSuffix(dirpath, "/")
 
 	stat, err := os.Stat(dirpath)
@@ -155,7 +144,9 @@ func sendDir(dirpath string) {
 	}
 
 	if !stat.IsDir() {
-		log.Fatalf("%s is not a directory", dirpath)
+		//log.Fatalf("%s is not a directory", dirpath)
+		*feedbackstr = fmt.Sprintf("%s is not a directory", dirpath)
+		return "", nil, err
 	}
 
 	prefix, dirname := filepath.Split(dirpath)
@@ -189,18 +180,24 @@ func sendDir(dirpath string) {
 	ctx := context.Background()
 	code, status, err := c.SendDirectory(ctx, dirname, entries, wormhole.WithCode(codeFlag))
 	if err != nil {
-		log.Fatal(err)
+		// *feedbackstr = fmt.Sprintf
+		// log.Fatal(err)
+		return "", nil, err
 	}
 
-	printInstructions(code)
+	return code, status, err
 
-	s := <-status
+	/*
+		printInstructions(code)
 
-	if s.OK {
-		fmt.Println("directory sent")
-	} else {
-		bail("Send error: %s", s.Error)
-	}
+		s := <-status
+
+		if s.OK {
+			fmt.Println("directory sent")
+		} else {
+			bail("Send error: %s", s.Error)
+		}
+	*/
 }
 
 func sendText() {

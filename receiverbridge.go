@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/psanford/wormhole-william/wormhole"
 	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/widgets"
 )
 
 type ReceiveBridge struct {
@@ -24,6 +26,32 @@ func (l *ReceiveBridge) init() {
 	l.SetTableModel(receiverTableModel)
 }
 
+/***/
+
+func showError(s string) {
+	a := widgets.NewQMessageBox(nil)
+	a.SetText(s)
+	a.Show()
+	fmt.Printf("Error: %s", s)
+}
+
+func getWorkingDirectory() string {
+	if len(settingsBridge.DownloadDirectory()) <= 0 {
+		wd, err := os.Getwd()
+		if err != nil {
+			return ""
+		}
+		fmt.Printf("No download directory set, using working dir: %s\n", wd)
+		return wd
+	} else {
+		wd := settingsBridge.DownloadDirectory()
+		fmt.Printf("Using download directory: %s\n", wd)
+		return wd
+	}
+}
+
+/***/
+
 func (b *ReceiveBridge) clickDownload(s string) { // Download
 	jobtotal := new(int)
 	jobdone := new(int)
@@ -34,11 +62,24 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	msg, err := wormholeConnect(receiveBridge.Code())
 	if err != nil {
 		// log.Fatal(err)
-		fmt.Printf("Could not connect, wrong code?")
+		//fmt.Printf("Could not connect, wrong code?")
+		//showError(err.Error())
+		showError(fmt.Sprintf("Could not connect, wrong code %s?", receiveBridge.Code()))
 		return
 	}
 	*jobtotal = msg.TransferBytes
 	*jobdone = 0
+
+	// Check if file already exists. Cancel if it does
+	// This is necessary, as os.Rename() doesnt generate an error when file already
+	// exists, even though it should...
+	// Also better to handle it here before the download starts
+	wd := getWorkingDirectory()
+	filePath := fmt.Sprintf("%s/%s", wd, msg.Name)
+	if _, err := os.Stat(filePath); err == nil {
+		showError(fmt.Sprintf("File already exists: %s", filePath))
+		return
+	}
 
 	tableIndex = receiverTableModel.addNative(
 		msg.Name,
@@ -53,16 +94,24 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 		// Handle errors and finish
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
-			receiverTableModel.editIdx(
-				tableIndex,
-				msg.Name,
-				strconv.Itoa(*jobtotal),
-				strconv.Itoa(*jobdone),
-				"Done")
 
-			/*a := widgets.NewQMessageBox(nil)
-			a.SetText(*feedbackstr)
-			a.Show()*/
+			if *feedbackstr == "Done" {
+				receiverTableModel.editIdx(
+					tableIndex,
+					msg.Name,
+					strconv.Itoa(*jobtotal),
+					strconv.Itoa(*jobdone),
+					"Done")
+			} else {
+				receiverTableModel.editIdx(
+					tableIndex,
+					msg.Name,
+					strconv.Itoa(*jobtotal),
+					strconv.Itoa(*jobdone),
+					"Error")
+
+				showError(*feedbackstr)
+			}
 
 			return true
 		}
@@ -86,6 +135,7 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 	// It communicates with parent via variables
 	// jobdone, feedbackstr
 	go func() {
+		/// ???
 		/*
 			defer func() {
 				if err := recover(); err != nil {
@@ -103,8 +153,6 @@ func (b *ReceiveBridge) clickDownload(s string) { // Download
 		case wormhole.TransferDirectory:
 			wormholeTransferDirectory(msg, jobtotal, jobdone, feedbackstr)
 		}
-
-		//*feedbackstr = "ok"
 	}()
 }
 

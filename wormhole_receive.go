@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,7 +39,8 @@ func wormholeConnect(code string) (*wormhole.IncomingMessage, error) {
 func wormholeTransferText(msg *wormhole.IncomingMessage, jobtotal *int, jobdone *int, feedbackstr *string) {
 	body, err := ioutil.ReadAll(msg)
 	if err != nil {
-		log.Fatal(err)
+		*feedbackstr = fmt.Sprintf("Error: %s", err.Error())
+		return
 	}
 
 	fmt.Println(string(body))
@@ -66,21 +66,15 @@ func wormholeTransferFile(msg *wormhole.IncomingMessage, jobtotal *int, jobdone 
 
 	if !acceptFile {
 		msg.Reject()
-		bail("transfer rejected")
+		*feedbackstr = fmt.Sprintf("transfer rejected")
+		return
 	} else {
-		var wd string
-		if len(settingsBridge.DownloadDirectory()) <= 0 {
-			wd2, err := os.Getwd()
-			if err != nil {
-				bail("Failed to get working directory: %s", err)
-			}
-			wd = wd2
-		} else {
-			wd = settingsBridge.DownloadDirectory()
-		}
+		wd := getWorkingDirectory()
+
 		f, err := ioutil.TempFile(wd, fmt.Sprintf("%s.tmp", msg.Name))
 		if err != nil {
-			bail("Failed to create tempfile: %s", err)
+			*feedbackstr = fmt.Sprintf("Failed to create tempfile: %s", err)
+			return
 		}
 
 		buffer := make([]byte, BufferSize)
@@ -106,7 +100,8 @@ func wormholeTransferFile(msg *wormhole.IncomingMessage, jobtotal *int, jobdone 
 
 		err = os.Rename(tmpName, msg.Name)
 		if err != nil {
-			bail("Rename %s to %s failed: %s", tmpName, msg.Name, err)
+			*feedbackstr = fmt.Sprintf("Rename %s to %s failed: %s", tmpName, msg.Name, err)
+			return
 		}
 
 		*feedbackstr = "Done"
@@ -114,30 +109,33 @@ func wormholeTransferFile(msg *wormhole.IncomingMessage, jobtotal *int, jobdone 
 }
 
 func wormholeTransferDirectory(msg *wormhole.IncomingMessage, jobtotal *int, jobdone *int, feedbackstr *string) {
-	var acceptDir bool
-
 	wd, err := os.Getwd()
 	if err != nil {
-		bail("Failed to get working directory: %s", err)
+		*feedbackstr = fmt.Sprintf("Failed to get working directory: %s", err)
+		return
 	}
 
 	dirName := msg.Name
 	dirName, err = filepath.Abs(dirName)
 	if err != nil {
-		bail("Failed to get abs directory: %s", err)
+		*feedbackstr = fmt.Sprintf("Failed to get abs directory: %s", err)
+		return
 	}
 
 	if filepath.Dir(dirName) != wd {
-		bail("Bad Directory name %s", msg.Name)
+		*feedbackstr = fmt.Sprintf("Bad Directory name %s", msg.Name)
+		return
 	}
 
 	if _, err := os.Stat(dirName); err == nil {
-		errf("Error refusing to overwrite existing '%s'", msg.Name)
+		*feedbackstr = fmt.Sprintf("Error refusing to overwrite existing '%s'", msg.Name)
+		return
 	} else if !os.IsNotExist(err) {
-		errf("Error stat'ing existing '%s'\n", msg.Name)
+		*feedbackstr = fmt.Sprintf("Error stat'ing existing '%s'\n", msg.Name)
+		return
 	} else {
-		fmt.Printf("Receiving directory (%s) into: %s\n", formatBytes(msg.TransferBytes), msg.Name)
-		fmt.Printf("%d files, %s (uncompressed)\n", msg.FileCount, formatBytes(msg.UncompressedBytes))
+		//fmt.Printf("Receiving directory (%s) into: %s\n", formatBytes(msg.TransferBytes), msg.Name)
+		//fmt.Printf("%d files, %s (uncompressed)\n", msg.FileCount, formatBytes(msg.UncompressedBytes))
 
 		/*
 			reader := bufio.NewReader(os.Stdin)
@@ -153,18 +151,22 @@ func wormholeTransferDirectory(msg *wormhole.IncomingMessage, jobtotal *int, job
 				acceptDir = true
 			}*/
 
+		var acceptDir bool = true
 		if !acceptDir {
 			msg.Reject()
-			bail("transfer rejected")
+			*feedbackstr = fmt.Sprintf("transfer rejected")
+			return
 		} else {
 			err = os.Mkdir(msg.Name, 0777)
 			if err != nil {
-				bail("Mkdir error for %s: %s\n", msg.Name, err)
+				*feedbackstr = fmt.Sprintf("Mkdir error for %s: %s\n", msg.Name, err)
+				return
 			}
 
 			tmpFile, err := ioutil.TempFile(wd, fmt.Sprintf("%s.zip.tmp", msg.Name))
 			if err != nil {
-				bail("Failed to create tempfile: %s", err)
+				*feedbackstr = fmt.Sprintf("Failed to create tempfile: %s", err)
+				return
 			}
 
 			defer tmpFile.Close()
@@ -175,49 +177,58 @@ func wormholeTransferDirectory(msg *wormhole.IncomingMessage, jobtotal *int, job
 			n, err := io.Copy(tmpFile, proxyReader)
 			if err != nil {
 				os.Remove(tmpFile.Name())
-				bail("Receive file error: %s", err)
+				*feedbackstr = fmt.Sprintf("Receive file error: %s", err)
+				return
 			}
 
 			tmpFile.Seek(0, io.SeekStart)
 			zr, err := zip.NewReader(tmpFile, int64(n))
 			if err != nil {
-				bail("Read zip error: %s", err)
+				*feedbackstr = fmt.Sprintf("Read zip error: %s", err)
+				return
 			}
 
 			for _, zf := range zr.File {
 				p, err := filepath.Abs(filepath.Join(dirName, zf.Name))
 				if err != nil {
-					bail("Failes to calculate file path ABS: %s", err)
+					*feedbackstr = fmt.Sprintf("Failes to calculate file path ABS: %s", err)
+					return
 				}
 
 				if !strings.HasPrefix(p, dirName) {
-					bail("Dangerous filename detected: %s", zf.Name)
+					*feedbackstr = fmt.Sprintf("Dangerous filename detected: %s", zf.Name)
+					return
 				}
 
 				rc, err := zf.Open()
 				if err != nil {
-					bail("Failed to open file in zip: %s %s", zf.Name, err)
+					*feedbackstr = fmt.Sprintf("Failed to open file in zip: %s %s", zf.Name, err)
+					return
 				}
 
 				dir := filepath.Dir(p)
 				err = os.MkdirAll(dir, 0777)
 				if err != nil {
-					bail("Failed to mkdirall %s: %s", dir, err)
+					*feedbackstr = fmt.Sprintf("Failed to mkdirall %s: %s", dir, err)
+					return
 				}
 
 				f, err := os.Create(p)
 				if err != nil {
-					bail("Failed to open %s: %s", p, err)
+					*feedbackstr = fmt.Sprintf("Failed to open %s: %s", p, err)
+					return
 				}
 
 				_, err = io.Copy(f, rc)
 				if err != nil {
-					bail("Failed to write to %s: %s", p, err)
+					*feedbackstr = fmt.Sprintf("Failed to write to %s: %s", p, err)
+					return
 				}
 
 				err = f.Close()
 				if err != nil {
-					bail("Error closing %s: %s", p, err)
+					*feedbackstr = fmt.Sprintf("Error closing %s: %s", p, err)
+					return
 				}
 
 				rc.Close()
@@ -225,6 +236,7 @@ func wormholeTransferDirectory(msg *wormhole.IncomingMessage, jobtotal *int, job
 
 			proxyReader.Close()
 
+			*feedbackstr = "Done"
 		}
 	}
 }
@@ -234,11 +246,6 @@ func errf(msg string, args ...interface{}) {
 	if !strings.HasSuffix("\n", msg) {
 		fmt.Fprint(os.Stderr, "\n")
 	}
-}
-
-func bail(msg string, args ...interface{}) {
-	errf(msg, args...)
-	//os.Exit(1)
 }
 
 func formatBytes(b int) string {

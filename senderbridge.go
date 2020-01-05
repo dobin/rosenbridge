@@ -41,7 +41,7 @@ func (b *SenderBridge) clickAddFile() {
 
 	stat, err := os.Stat(filename)
 	if err != nil {
-		bail("Failed to read %s: %s", filename, err)
+		showError(fmt.Sprintf("Failed to read %s: %s", filename, err))
 	}
 	*jobtotal = stat.Size()
 	*jobdone = 0
@@ -60,17 +60,26 @@ func (b *SenderBridge) clickAddFile() {
 		// Handle errors and finish
 		if len(*feedbackstr) > 0 {
 			t.DisconnectEvent()
-			senderTableModel.editIdx(
-				tableIndex,
-				filename,
-				*mycode,
-				strconv.FormatInt(*jobtotal, 10),
-				strconv.FormatInt(*jobdone, 10),
-				"Done")
 
-			/*a := widgets.NewQMessageBox(nil)
-			a.SetText(*feedbackstr)
-			a.Show()*/
+			if *feedbackstr == "Done" {
+				senderTableModel.editIdx(
+					tableIndex,
+					filename,
+					*mycode,
+					strconv.FormatInt(*jobtotal, 10),
+					strconv.FormatInt(*jobdone, 10),
+					"Done")
+			} else {
+				senderTableModel.editIdx(
+					tableIndex,
+					filename,
+					*mycode,
+					strconv.FormatInt(*jobtotal, 10),
+					strconv.FormatInt(*jobdone, 10),
+					"Error")
+
+				showError(*feedbackstr)
+			}
 
 			return true
 		}
@@ -117,11 +126,10 @@ func (b *SenderBridge) clickAddFile() {
 
 		// Start downloading it in the background
 		if stat.IsDir() {
-			sendDir(filename)
-		} else {
-			code2, status, err := sendFile(filename, jobdone, feedbackstr)
+			code2, status, err := sendDir(filename, jobdone, feedbackstr)
 			if err != nil {
-				bail("Error sending message: %s", err)
+				*feedbackstr = fmt.Sprintf("Error sending message: %s", err)
+				return
 			}
 
 			// Cant update TableModel here in this go func()
@@ -133,10 +141,29 @@ func (b *SenderBridge) clickAddFile() {
 			s := <-status
 			if s.OK {
 				fmt.Println("file sent")
-				*feedbackstr = "Ok"
+				*feedbackstr = "Done"
 			} else {
-				bail("Send error: %s", s.Error)
-				*feedbackstr = "Error"
+				*feedbackstr = fmt.Sprintf("Send error: %s", s.Error)
+			}
+		} else {
+			code2, status, err := sendFile(filename, jobdone, feedbackstr)
+			if err != nil {
+				*feedbackstr = fmt.Sprintf("Error sending message: %s", err)
+				return
+			}
+
+			// Cant update TableModel here in this go func()
+			// Return it to the QTimer
+			// before waiting for upload result
+			*code = code2
+
+			// Wait till its finished
+			s := <-status
+			if s.OK {
+				fmt.Println("file sent")
+				*feedbackstr = "Done"
+			} else {
+				*feedbackstr = fmt.Sprintf("Send error: %s", s.Error)
 			}
 		}
 

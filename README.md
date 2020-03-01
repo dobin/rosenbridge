@@ -1,6 +1,6 @@
 # Rosen
 
-A graphical user interface for (Magic Wormhole)[https://github.com/warner/magic-wormhole]. 
+A graphical user interface for [Magic Wormhole](https://github.com/warner/magic-wormhole). 
 
 
 ## Screenshots
@@ -21,7 +21,7 @@ Windows:
 $(go env GOPATH)/bin/qtdeploy -docker build windows
 ```
 
-Reference: (QT Getting Started)[https://github.com/therecipe/qt/wiki/Getting-Started]
+Reference: [QT Getting Started](https://github.com/therecipe/qt/wiki/Getting-Started)
 
 
 ## Technology

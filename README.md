@@ -2,7 +2,7 @@
 
 A graphical user interface for [Magic Wormhole](https://github.com/warner/magic-wormhole). 
 
-Project is currently not actively developed. See [https://github.com/jacalz/wormhole-gui](Wormhole GUI) as a alternative.
+Project is currently not actively developed. See [Wormhole GUI](https://github.com/jacalz/wormhole-gui) as a alternative.
 
 ## Screenshots
 

@@ -2,6 +2,7 @@
 
 A graphical user interface for [Magic Wormhole](https://github.com/warner/magic-wormhole). 
 
+Project is currently not actively developed. See [https://github.com/jacalz/wormhole-gui](Wormhole GUI) as a alternative.
 
 ## Screenshots
 
@@ -35,5 +36,8 @@ Reference: [QT Getting Started](https://github.com/therecipe/qt/wiki/Getting-Sta
 https://en.wikipedia.org/wiki/Nathan_Rosen
 
 ```
-Nathan Rosen (Hebrew: נתן רוזן; March 22, 1909 – December 18, 1995) was an Israeli physicist noted for his study on the structure of the hydrogen atom and his work with Albert Einstein and Boris Podolsky on entangled wave functions and the EPR paradox. The Einstein–Rosen bridge, later named the wormhole, was a theory of Nathan Rosen.
+Nathan Rosen (Hebrew: נתן רוזן; March 22, 1909 – December 18, 1995) was an Israeli 
+physicist noted for his study on the structure of the hydrogen atom and his work with
+Albert Einstein and Boris Podolsky on entangled wave functions and the EPR paradox. 
+The Einstein–Rosen bridge, later named the wormhole, was a theory of Nathan Rosen.
 ```
